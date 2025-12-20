@@ -1,0 +1,346 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import HeroVideo, { HeroVideoRef } from "@/components/ui/HeroVideo";
+
+// Hero slides with different content and project links
+const heroSlides = [
+  {
+    src: "/videos/mining.mp4",
+    type: "video",
+    alt: "Minerals inside mountains - mining exploration",
+    gradient:
+      "linear-gradient(135deg, rgba(10, 14, 20, 0.85) 0%, rgba(15, 20, 25, 0.8) 50%, rgba(26, 31, 38, 0.85) 100%)",
+    badge: "Mining Exploration",
+    title: "Discovering Minerals",
+    highlight: "Inside Mountains",
+    description:
+      "Exploring the depths of Norway's mountains to uncover critical minerals essential for Europe's green transition. Our advanced exploration techniques reveal the hidden treasures within.",
+    projectSlug: "projects",
+    ctaText: "Explore Our Assets",
+    secondaryCtaText: "Our Technology",
+  },
+  {
+    src: "/images/hero/01.jpg",
+    type: "image",
+    alt: "Mineral exploration site with geological formations",
+    gradient:
+      "linear-gradient(135deg, rgba(10, 14, 20, 0.85) 0%, rgba(15, 20, 25, 0.8) 50%, rgba(26, 31, 38, 0.85) 100%)",
+    badge: "Responsible Mining",
+    title: "Responsible Mining for the",
+    highlight: "Green Transition",
+    description:
+      "Securing Europe's supply of vital resources. We hold 72 exploration licenses across 2,400 km², focusing on high-value minerals essential for renewable energy and geopolitical stability.",
+    projectSlug: "projects",
+    ctaText: "Explore Our Assets",
+    secondaryCtaText: "Our Technology",
+  },
+  {
+    src: "/images/hero/03.jpg",
+    type: "image",
+    alt: "Rare earth minerals and geological samples",
+    gradient:
+      "linear-gradient(135deg, rgba(26, 31, 38, 0.85) 0%, rgba(10, 14, 20, 0.8) 50%, rgba(15, 20, 25, 0.85) 100%)",
+    badge: "Critical Minerals",
+    title: "Rare Earth Elements",
+    highlight: "Strategic Resources",
+    description:
+      "Exploring rare earth elements essential for the energy transition. Contributing to Europe's mineral independence.",
+    projectSlug: "projects",
+    ctaText: "View All Projects",
+  },
+  {
+    src: "/images/hero/05.jpg",
+    type: "image",
+    alt: "Underground mining tunnel and mineral deposits",
+    gradient:
+      "linear-gradient(135deg, rgba(15, 31, 58, 0.7) 0%, rgba(26, 47, 77, 0.6) 50%, rgba(20, 35, 60, 0.7) 100%)",
+    badge: "Investment Opportunity",
+    title: "Science-Driven Discovery",
+    highlight: "Innovation",
+    description:
+      "Pioneering a new era of mineral exploration in Europe with cutting-edge technology and proven expertise.",
+    projectSlug: "investors",
+    ctaText: "Investor Relations",
+  },
+];
+
+export default function HeroSection() {
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const currentSlide = heroSlides[currentSlideIndex];
+  const isVideoSlide = currentSlide.type === "video";
+  const videoRef = useRef<HeroVideoRef>(null);
+
+  // Handle video ended - advance to next slide
+  const handleVideoEnded = () => {
+    setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  // Restart video when returning to video slide
+  useEffect(() => {
+    if (isVideoSlide && videoRef.current) {
+      videoRef.current.restart();
+    }
+  }, [currentSlideIndex, isVideoSlide]);
+
+  useEffect(() => {
+    // Only auto-advance for image slides, not video slides
+    // Video slides will advance when video ends
+    if (isVideoSlide) {
+      return; // Don't set interval for video slides
+    }
+
+    const slideDuration = 6000; // 6 seconds for image slides
+
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length);
+    }, slideDuration);
+
+    return () => clearInterval(interval);
+  }, [currentSlideIndex, isVideoSlide]);
+
+  // Handle manual navigation - restart video if navigating to video slide
+  const handleSlideChange = (index: number) => {
+    setCurrentSlideIndex(index);
+    // If navigating to video slide, restart will be handled by useEffect
+  };
+
+  return (
+    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+      {/* Background Media Carousel (Images and Videos) */}
+      <div className="absolute inset-0 w-full h-full z-[1]">
+        <AnimatePresence mode="wait">
+          {heroSlides.map((slide, index) => (
+            <motion.div
+              key={`${slide.src}-${index}`}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{
+                opacity: index === currentSlideIndex ? 1 : 0,
+                scale: index === currentSlideIndex ? 1 : 1.1,
+              }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              {/* Fallback gradient background */}
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-charcoal-950 via-charcoal-900 to-charcoal-950"
+                style={{
+                  backgroundImage: slide.gradient,
+                }}
+              />
+
+              {/* Render Video or Image based on slide type */}
+              {slide.type === "video" ? (
+                <div className="absolute inset-0 overflow-hidden">
+                  <HeroVideo
+                    ref={videoRef}
+                    src={slide.src}
+                    className="object-cover"
+                    isActive={index === currentSlideIndex}
+                    onEnded={index === currentSlideIndex ? handleVideoEnded : undefined}
+                    style={{
+                      objectPosition: "center top",
+                      transform: "scale(1.15)",
+                    }}
+                  />
+                </div>
+              ) : (
+                <Image
+                  src={slide.src}
+                  alt={slide.alt}
+                  fill
+                  priority={index === 0}
+                  className="object-cover"
+                  sizes="100vw"
+                  quality={90}
+                  onError={(e) => {
+                    // Hide image if it fails to load, show gradient fallback
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                  }}
+                />
+              )}
+
+              {/* Deep Navy Overlay for better text readability - only show on image slides */}
+              {slide.type === "image" && (
+                <>
+                  <div
+                    className="absolute inset-0 hero-overlay"
+                    style={{
+                      background: `linear-gradient(to bottom, color-mix(in srgb, var(--color-primary-main) 75%, transparent) 0%, color-mix(in srgb, var(--color-primary-main) 55%, transparent) 100%)`,
+                    }}
+                  />
+                  {/* Subtle pattern overlay */}
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
+                      backgroundSize: "40px 40px",
+                    }}
+                  />
+                </>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Content - Changes with each slide - Hide on video slides */}
+      {!isVideoSlide && (
+        <div className="container relative z-10 px-4 sm:px-6 lg:px-8 w-full">
+          <div className="max-w-6xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlideIndex}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ duration: 0.6 }}
+                className="text-center lg:text-left"
+              >
+                {/* Badge */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="inline-block mb-6 lg:mb-8"
+                >
+                  <span
+                    className="text-eyebrow px-5 py-2.5 rounded-full backdrop-blur-sm"
+                    style={{
+                      background: "color-mix(in srgb, var(--color-accent-main) 15%, transparent)",
+                      color: "var(--color-accent-main)",
+                      border: `1px solid color-mix(in srgb, var(--color-accent-main) 30%, transparent)`,
+                      boxShadow: "var(--shadow-accent)",
+                    }}
+                  >
+                    {currentSlide.badge}
+                  </span>
+                </motion.div>
+
+                {/* Main Heading */}
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.8 }}
+                  className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 lg:mb-6 leading-tight"
+                  style={{ color: "var(--color-gray-50)" }}
+                >
+                  {currentSlide.title}{" "}
+                  <span
+                    style={{
+                      color: "var(--color-accent-main)",
+                    }}
+                  >
+                    {currentSlide.highlight}
+                  </span>
+                </motion.h1>
+
+                {/* Description */}
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.8 }}
+                  className="text-xl md:text-2xl lg:text-3xl mb-10 lg:mb-12 max-w-4xl mx-auto lg:mx-0 leading-relaxed"
+                  style={{
+                    color: "var(--color-text-on-dark)",
+                    fontFamily: "var(--font-family-body)",
+                    lineHeight: "var(--line-height-loose)",
+                  }}
+                >
+                  {currentSlide.description}
+                </motion.p>
+
+                {/* CTA - Links to specific project */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                  className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center lg:justify-start"
+                >
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link
+                      href={`/${currentSlide.projectSlug}`}
+                      className="inline-block px-10 py-5 rounded-lg font-bold text-lg lg:text-xl transition-all duration-300"
+                      style={{
+                        background: "var(--color-accent-main)",
+                        color: "var(--color-accent-contrast)",
+                        boxShadow: "var(--shadow-accent-lg)",
+                        fontFamily: "var(--font-family-heading)",
+                      }}
+                    >
+                      {currentSlide.ctaText}
+                    </Link>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link
+                      href={currentSlide.secondaryCtaText ? "/about" : "/projects"}
+                      className="inline-block px-10 py-5 rounded-lg font-bold text-lg lg:text-xl border-2 transition-all duration-300 backdrop-blur-sm"
+                      style={{
+                        borderColor: "var(--color-gray-200)",
+                        color: "var(--color-gray-50)",
+                        background: "rgba(255, 255, 255, 0.08)",
+                        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.3)",
+                      }}
+                    >
+                      {currentSlide.secondaryCtaText || "View All Projects"}
+                    </Link>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* Image Carousel Indicators */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex space-x-3">
+        {heroSlides.map((_, index) => (
+          <button
+            key={index}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === currentSlideIndex ? "w-10 shadow-lg" : "w-2 bg-white/40 hover:bg-white/60"
+            }`}
+            style={index === currentSlideIndex ? { background: "var(--color-accent-main)" } : {}}
+            onClick={() => handleSlideChange(index)}
+            aria-label={`View slide ${index + 1}: ${heroSlides[index].title}`}
+          />
+        ))}
+      </div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.8, duration: 0.8 }}
+        className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <span
+            className="text-sm font-medium uppercase tracking-wider"
+            style={{ color: "var(--color-gray-300)" }}
+          >
+            Scroll to explore
+          </span>
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="var(--color-gray-300)" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+          </motion.div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
