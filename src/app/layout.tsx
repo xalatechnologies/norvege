@@ -29,6 +29,10 @@ export const metadata: Metadata = {
     "exploration",
   ],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://norvegeminerals.no"),
+  icons: {
+    icon: [{ url: "/icon.png", sizes: "128x128", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
